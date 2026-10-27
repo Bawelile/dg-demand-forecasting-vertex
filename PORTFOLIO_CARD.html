@@ -1,0 +1,17 @@
+    <!-- Paste into bawelile.github.io index.html, right after the project 14 card (before the closing </div> of the projects grid). -->
+    <div class="project-card">
+      <div class="project-num">15 / ML Engineering · Vertex AI</div>
+      <div class="project-title">Store-Item Demand Forecasting on Vertex AI</div>
+      <div class="project-tagline">The full ML lifecycle, from raw data to a monitored model, with a gate that only ships a better forecast</div>
+      <p class="project-desc">An end-to-end system that forecasts 14 days of unit sales for every store and item in a dollar-store chain. A simulator builds two years of daily sales with SNAP and paycheck timing, rural and urban stores, promotions, and stockouts. The pipeline validates the data, builds leak-free features (proven by a unit test), trains XGBoost on a time-based split, and promotes a model only if it beats a seasonal-naive baseline and the live champion. Daily WAPE is 52.9% against 73.7% for the baseline, within 0.8 points of a perfect model; weekly WAPE is 24.2%, cutting forecast-error cost by about $60K in four weeks. Nightly forecasts carry their top three SHAP reasons. In a drift test, region-level monitoring caught a 46% over-forecast that the overall average hid. It all compiles to two Vertex AI pipelines: weekly training and daily monitoring.</p>
+      <div class="project-tags">
+        <span class="tag">XGBoost</span><span class="tag">Vertex AI Pipelines</span>
+        <span class="tag">Kubeflow (KFP v2)</span><span class="tag">BigQuery SQL</span>
+        <span class="tag">Model Registry</span><span class="tag">Drift Monitoring</span>
+        <span class="tag">SHAP</span><span class="tag">CI/CD</span>
+      </div>
+      <div class="project-links">
+        <a href="https://github.com/Bawelile/dg-demand-forecasting-vertex" class="project-link" target="_blank">GitHub →</a>
+        <a href="https://bawelile.github.io/dg-demand-forecasting-vertex/dashboard.html" class="project-link demo" target="_blank">▶ Live Dashboard</a>
+      </div>
+    </div>
