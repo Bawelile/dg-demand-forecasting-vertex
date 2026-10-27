@@ -1,0 +1,191 @@
+{
+  "run_id": "run-20261026-234444",
+  "candidate": {
+    "overall": {
+      "wape": 0.5285131276296409,
+      "bias": -0.07672008518281197,
+      "mae": 2.0671726585782366,
+      "units": 194239.0
+    },
+    "by_store_format": {
+      "rural": {
+        "wape": 0.5901,
+        "bias": -0.0463,
+        "mae": 1.5522,
+        "units": 39188.0
+      },
+      "small_town": {
+        "wape": 0.539,
+        "bias": -0.072,
+        "mae": 1.9516,
+        "units": 53883.0
+      },
+      "suburban": {
+        "wape": 0.5026,
+        "bias": -0.0921,
+        "mae": 2.4516,
+        "units": 72774.0
+      },
+      "urban": {
+        "wape": 0.49,
+        "bias": -0.0882,
+        "mae": 2.8045,
+        "units": 28394.0
+      }
+    },
+    "by_category": {
+      "beverages": {
+        "wape": 0.6383,
+        "bias": -0.0006,
+        "mae": 1.4677,
+        "units": 17112.0
+      },
+      "dairy": {
+        "wape": 0.5923,
+        "bias": -0.1074,
+        "mae": 1.5335,
+        "units": 15021.0
+      },
+      "frozen": {
+        "wape": 0.5103,
+        "bias": -0.0647,
+        "mae": 2.3061,
+        "units": 41183.0
+      },
+      "health_beauty": {
+        "wape": 0.5083,
+        "bias": -0.0945,
+        "mae": 2.2686,
+        "units": 25875.0
+      },
+      "household": {
+        "wape": 0.5332,
+        "bias": -0.1064,
+        "mae": 2.0421,
+        "units": 22188.0
+      },
+      "paper": {
+        "wape": 0.4825,
+        "bias": -0.0795,
+        "mae": 2.6486,
+        "units": 40799.0
+      },
+      "seasonal": {
+        "wape": 0.5461,
+        "bias": -0.072,
+        "mae": 1.9284,
+        "units": 8765.0
+      },
+      "snacks": {
+        "wape": 0.5308,
+        "bias": -0.083,
+        "mae": 2.1328,
+        "units": 23296.0
+      }
+    },
+    "dollars": {
+      "lost_margin_usd": 111299.06708701156,
+      "holding_cost_usd": 58033.65428990185,
+      "total_cost_usd": 169332.72137691343
+    }
+  },
+  "baseline": {
+    "overall": {
+      "wape": 0.7366804422693884,
+      "bias": 0.012097688189922802,
+      "mae": 2.881377185839265,
+      "units": 194239.0
+    },
+    "by_store_format": {
+      "rural": {
+        "wape": 0.8099,
+        "bias": -0.0055,
+        "mae": 2.1303,
+        "units": 39188.0
+      },
+      "small_town": {
+        "wape": 0.7483,
+        "bias": 0.0145,
+        "mae": 2.7091,
+        "units": 53883.0
+      },
+      "suburban": {
+        "wape": 0.705,
+        "bias": 0.0138,
+        "mae": 3.4393,
+        "units": 72774.0
+      },
+      "urban": {
+        "wape": 0.6947,
+        "bias": 0.0274,
+        "mae": 3.9763,
+        "units": 28394.0
+      }
+    },
+    "by_category": {
+      "beverages": {
+        "wape": 0.9032,
+        "bias": 0.0839,
+        "mae": 2.0768,
+        "units": 17112.0
+      },
+      "dairy": {
+        "wape": 0.8302,
+        "bias": -0.0039,
+        "mae": 2.1493,
+        "units": 15021.0
+      },
+      "frozen": {
+        "wape": 0.7131,
+        "bias": 0.0093,
+        "mae": 3.2224,
+        "units": 41183.0
+      },
+      "health_beauty": {
+        "wape": 0.6994,
+        "bias": -0.0151,
+        "mae": 3.1212,
+        "units": 25875.0
+      },
+      "household": {
+        "wape": 0.7411,
+        "bias": -0.01,
+        "mae": 2.8386,
+        "units": 22188.0
+      },
+      "paper": {
+        "wape": 0.6681,
+        "bias": 0.021,
+        "mae": 3.6673,
+        "units": 40799.0
+      },
+      "seasonal": {
+        "wape": 0.7784,
+        "bias": 0.0392,
+        "mae": 2.7488,
+        "units": 8765.0
+      },
+      "snacks": {
+        "wape": 0.7374,
+        "bias": 0.0,
+        "mae": 2.9627,
+        "units": 23296.0
+      }
+    },
+    "dollars": {
+      "lost_margin_usd": 132409.6307565017,
+      "holding_cost_usd": 97160.75285786115,
+      "total_cost_usd": 229570.38361436286
+    }
+  },
+  "weekly_wape": {
+    "candidate": 0.24209518612628805,
+    "baseline": 0.34341048730999746
+  },
+  "oracle_wape": 0.5209357559956698,
+  "decision": {
+    "promote": true,
+    "reason": "no champion yet; candidate beats baseline",
+    "champion_version": null
+  }
+}

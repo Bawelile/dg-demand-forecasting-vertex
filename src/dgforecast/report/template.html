@@ -1,0 +1,522 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Demand Forecasting on Vertex AI</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&family=DM+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: the portfolio's navy masthead, then a walk through the system in the order data moves:
+   an interactive lifecycle map with a detail panel, then one section per stage's real output. */
+:root{
+  --navy:#0D1B2A; --band-ink:#FFFFFF; --band-mute:#8BA3BC; --gold:#C8962A; --gold-l:#E8B84B;
+  --bg:#F4F7FA; --surface:#FFFFFF; --sheet:#E9EFF5; --ink:#1C2B3A; --muted:#4A6080; --line:#D5E0EA;
+  --accent:#1A6B8A; --accent-soft:#E2EFF4; --hl:#9C6F12; --hl-soft:#F7EDD6;
+  --good:#22744A; --good-soft:#E0F1E7; --bad:#B23E3E; --bad-soft:#F7E2E2; --neutral:#9DB0C3;
+  --code-bg:#0F2133; --code-ink:#D9E4EE;
+  --display:"DM Serif Display",Georgia,"Times New Roman",serif;
+  --body:"DM Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"DM Mono",ui-monospace,Menlo,Consolas,monospace;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0F1E2E; --surface:#152639; --sheet:#112233; --ink:#E6EDF4; --muted:#8BA3BC; --line:#25384D;
+  --accent:#4FA7C7; --accent-soft:#16344A; --hl:#E8B84B; --hl-soft:#3A2E14;
+  --good:#6FCF97; --good-soft:#173A2A; --bad:#EE8A8A; --bad-soft:#40201F; --neutral:#4D6680;
+  --code-bg:#0A1622; --code-ink:#D9E4EE; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0F1E2E; --surface:#152639; --sheet:#112233; --ink:#E6EDF4; --muted:#8BA3BC; --line:#25384D;
+  --accent:#4FA7C7; --accent-soft:#16344A; --hl:#E8B84B; --hl-soft:#3A2E14;
+  --good:#6FCF97; --good-soft:#173A2A; --bad:#EE8A8A; --bad-soft:#40201F; --neutral:#4D6680;
+  --code-bg:#0A1622; --code-ink:#D9E4EE; color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.6}
+.gutter{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.wrap{max-width:1080px;margin:0 auto}
+a{color:var(--accent)}
+:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.kicker{font-family:var(--mono);font-size:.72rem;letter-spacing:.16em;text-transform:uppercase;color:var(--gold);display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.kicker::before{content:"";width:28px;height:1px;background:var(--gold)}
+h1,h2,h3{font-family:var(--display);font-weight:400;margin:0;text-wrap:balance}
+h1{font-size:clamp(2.1rem,5.4vw,3.4rem);line-height:1.05;color:var(--band-ink)}
+h1 em,h2 em{color:var(--gold);font-style:italic}
+h2{font-size:clamp(1.6rem,3.6vw,2.2rem);line-height:1.12}
+h3{font-size:1.25rem;line-height:1.2}
+p{margin:0}
+.lede{color:var(--band-mute);max-width:64ch;font-size:1.05rem}
+.band{background:var(--navy);color:var(--band-ink);border-bottom:2px solid var(--gold)}
+.band .wrap{padding-block:44px 36px;display:grid;gap:18px}
+.tiles{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1px;background:rgba(139,163,188,.25);border:1px solid rgba(139,163,188,.25);border-radius:6px;overflow:hidden;margin-top:8px}
+.tile{background:var(--navy);padding:14px 16px;display:grid;gap:2px}
+.tile b{font-family:var(--display);font-weight:400;font-size:2rem;line-height:1.05;color:var(--band-ink);font-variant-numeric:tabular-nums}
+.tile b i{color:var(--gold);font-style:normal}
+.tile span{font-family:var(--mono);font-size:.68rem;letter-spacing:.12em;text-transform:uppercase;color:var(--band-mute)}
+.tile small{color:var(--band-mute);font-size:.82rem}
+.links{display:flex;flex-wrap:wrap;gap:10px}
+.btn{font:inherit;font-size:.9rem;font-weight:600;text-decoration:none;padding:9px 16px;border-radius:4px;border:1px solid rgba(139,163,188,.45);color:var(--band-ink);background:transparent;cursor:pointer}
+.btn.primary{background:var(--gold);border-color:var(--gold);color:var(--navy)}
+section.block{padding-block:56px 8px}
+.shead{display:grid;gap:8px;margin-bottom:22px}
+.shead .kicker{color:var(--hl)}.shead .kicker::before{background:var(--hl)}
+.shead p{color:var(--muted);max-width:68ch}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:18px 20px;min-width:0}
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.ctitle{font-weight:600;margin-bottom:2px}
+.csub{color:var(--muted);font-size:.86rem;margin-bottom:10px}
+.mono{font-family:var(--mono)}
+.num{font-variant-numeric:tabular-nums}
+/* lifecycle */
+.life{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:16px;align-items:start}
+.lifemap{position:sticky;top:16px}
+.lifemap svg{width:100%;height:auto;display:block}
+.node{cursor:pointer}
+.node rect{fill:var(--surface);stroke:var(--line);stroke-width:1.25;transition:fill .15s,stroke .15s}
+.node:hover rect{stroke:var(--accent)}
+.node.on rect{fill:var(--accent-soft);stroke:var(--accent);stroke-width:2}
+.node .nm{fill:var(--ink);font-weight:600;font-size:13px}
+.node .nb{fill:var(--hl);font-family:var(--mono);font-size:10.5px;letter-spacing:.08em}
+.node .ns{fill:var(--muted);font-size:11px}
+.node.gate rect{stroke:var(--gold)}
+.edge{stroke:var(--neutral);stroke-width:1.25;fill:none}
+.edgel{fill:var(--muted);font-size:10.5px}
+.chips{display:none;flex-wrap:wrap;gap:6px;margin-bottom:14px}
+.chip{font:inherit;font-size:.85rem;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:4px;padding:5px 10px;cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--navy);border-color:var(--navy);color:var(--gold-l)}
+.detail{display:grid;gap:12px;grid-template-columns:minmax(0,1fr)}
+.detail>*{min-width:0}
+.detail .step{font-family:var(--mono);font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;color:var(--hl)}
+.detail ul{margin:0;padding-left:18px;display:grid;gap:3px;font-size:.92rem}
+.facts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.fact{background:var(--sheet);border-radius:4px;padding:8px 10px}
+.fact b{display:block;font-size:1.15rem;font-variant-numeric:tabular-nums}
+.fact span{font-size:.78rem;color:var(--muted)}
+.cloud{font-size:.88rem;border-left:3px solid var(--gold);background:var(--hl-soft);padding:8px 12px;border-radius:0 4px 4px 0}
+pre.code{margin:0;background:var(--code-bg);color:var(--code-ink);border-radius:6px;padding:12px 14px;overflow-x:auto;font-family:var(--mono);font-size:.78rem;line-height:1.55;white-space:pre}
+.codefile{font-family:var(--mono);font-size:.72rem;color:var(--muted);margin-bottom:4px}
+/* charts */
+.chart{width:100%;min-height:40px}
+.chart svg{display:block;width:100%;height:auto;overflow:visible}
+.axis{stroke:var(--line);stroke-width:1}
+.grid{stroke:var(--line);stroke-width:1;stroke-dasharray:2 3}
+.lbl{fill:var(--ink);font-size:12.5px}
+.lbl.m{fill:var(--muted)}
+.val{fill:var(--ink);font-size:12px;font-family:var(--mono)}
+.legend{display:flex;flex-wrap:wrap;gap:14px;font-size:.82rem;color:var(--muted);margin-top:6px}
+.legend i{display:inline-block;width:12px;height:3px;border-radius:2px;margin-right:6px;vertical-align:middle}
+.tip{position:fixed;pointer-events:none;background:var(--navy);color:#fff;font-size:.8rem;padding:8px 10px;border-radius:4px;max-width:260px;z-index:20;box-shadow:0 4px 14px rgba(0,0,0,.18);line-height:1.4}
+.tip[hidden]{display:none}
+select{font:inherit;font-size:.9rem;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:4px;padding:6px 8px;max-width:100%}
+.tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:6px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;font-size:.88rem}
+th{font-family:var(--mono);font-weight:500;font-size:.68rem;letter-spacing:.12em;text-transform:uppercase;color:var(--band-mute);background:var(--navy);text-align:left;padding:9px 12px;white-space:nowrap}
+td{padding:9px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+tr:last-child td{border-bottom:none}
+.pill{display:inline-block;font-size:.74rem;font-weight:600;padding:2px 8px;border-radius:4px;white-space:nowrap}
+.pill.good{background:var(--good-soft);color:var(--good)}.pill.bad{background:var(--bad-soft);color:var(--bad)}.pill.gold{background:var(--hl-soft);color:var(--hl)}
+.note{color:var(--muted);font-size:.86rem}
+.callout{border:1px solid var(--line);border-left:3px solid var(--gold);background:var(--surface);border-radius:0 6px 6px 0;padding:12px 16px}
+.split svg{width:100%;height:auto;display:block}
+.tree{font-family:var(--mono);font-size:.8rem;line-height:1.6;white-space:pre;overflow-x:auto;margin:0;color:var(--ink)}
+.checks{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px 14px;font-size:.86rem}
+.checks div{display:flex;gap:8px;align-items:baseline;min-width:0}
+.checks .ok{color:var(--good);font-weight:700}
+footer{margin-top:64px;border-top:1px solid var(--line)}
+footer .wrap{padding-block:24px 40px;display:flex;flex-wrap:wrap;gap:12px;justify-content:space-between;color:var(--muted);font-size:.86rem}
+@media (max-width:860px){
+  .life{grid-template-columns:minmax(0,1fr)}
+  .grid3{grid-template-columns:minmax(0,1fr)}
+}
+@media (max-width:680px){
+  .tiles{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .grid2{grid-template-columns:minmax(0,1fr)}
+  .lifemap{display:none}.chips{display:flex}
+  .checks{grid-template-columns:minmax(0,1fr)}
+  .facts{grid-template-columns:minmax(0,1fr)}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+
+<header class="band gutter">
+  <div class="wrap">
+    <div class="kicker">Project · End-to-end ML engineering · Python · XGBoost · Vertex AI</div>
+    <h1>Store-item demand forecasting, <em>from raw data to a monitored model</em></h1>
+    <p class="lede">A dollar-store chain needs to know how many units of every item each store will sell over the next 14 days. This system builds that forecast every night: it checks the data, builds leak-free features, trains XGBoost, only ships a model that beats the live one, explains every number, and watches itself for drift. It runs on a laptop and compiles to Vertex AI Pipelines.</p>
+    <div class="tiles" id="tiles"></div>
+    <div class="links">
+      <a class="btn primary" href="#lifecycle">See how it works</a>
+      <a class="btn" href="https://github.com/Bawelile/dg-demand-forecasting-vertex" target="_blank" rel="noopener">Code on GitHub</a>
+      <a class="btn" href="https://bawelile.github.io" target="_blank" rel="noopener">Portfolio</a>
+    </div>
+  </div>
+</header>
+
+<main class="gutter">
+<div class="wrap">
+
+  <section class="block" id="lifecycle">
+    <div class="shead">
+      <div class="kicker">01 · The whole system</div>
+      <h2>Eight steps, <em>one loop</em></h2>
+      <p>Select any step to see what it does, its real output from the last run, the code behind it, and where it runs on Google Cloud. A new model reaches stores only through the gate, and monitoring sends the loop back to the start when the world changes.</p>
+    </div>
+    <div class="life">
+      <div class="card lifemap" id="lifemap"></div>
+      <div class="card">
+        <div class="chips" id="chips" role="group" aria-label="Pipeline steps"></div>
+        <div class="detail" id="detail" aria-live="polite"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="block" id="data">
+    <div class="shead">
+      <div class="kicker">02 · Data and checks</div>
+      <h2>Realistic demand, <em>validated before use</em></h2>
+      <p>Two years of daily sales from a simulator built around dollar-store demand: rural and urban stores, SNAP and first-of-month spikes, paycheck Fridays, holidays, promotions with price elasticity, regional storms, new stores, and stockouts. Every run starts by checking the data and stops if a check fails.</p>
+    </div>
+    <div class="grid2">
+      <div class="card"><div class="ctitle">What the data covers</div><div class="csub" id="datasub"></div><div class="facts" id="datafacts"></div></div>
+      <div class="card"><div class="ctitle">Validation report</div><div class="csub">All checks must pass or the pipeline stops.</div><div class="checks" id="checks"></div></div>
+    </div>
+  </section>
+
+  <section class="block" id="leakage">
+    <div class="shead">
+      <div class="kicker">03 · Features and training</div>
+      <h2>No peeking at <em>the future</em></h2>
+      <p>We forecast 14 days ahead, so every sales feature looks back at least 14 days; only planned inputs such as price, promotions, and the calendar describe the target day. Data is split by date, never at random. A unit test changes the most recent 14 days of sales and proves the features don't move.</p>
+    </div>
+    <div class="card split"><div class="ctitle">Time-based split used for the last run</div><div class="csub" id="splitsub"></div><div id="split"></div></div>
+  </section>
+
+  <section class="block" id="accuracy">
+    <div class="shead">
+      <div class="kicker">04 · Evaluation and the gate</div>
+      <h2>Close to the best <em>any model could do</em></h2>
+      <p>Scored on 28 days the model never saw, against a seasonal-naive baseline ("same weekday two weeks ago"). Because the simulator knows true expected demand, we can also score a perfect forecast: the error left over is day-to-day randomness no model can predict.</p>
+    </div>
+    <div class="grid3">
+      <div class="card"><div class="ctitle">Daily error, store-item (WAPE)</div><div class="csub">Lower is better</div><div class="chart" id="c-daily"></div></div>
+      <div class="card"><div class="ctitle">Weekly error, store-item (WAPE)</div><div class="csub">The level replenishment orders at</div><div class="chart" id="c-weekly"></div></div>
+      <div class="card"><div class="ctitle">Cost of forecast error, 4 weeks</div><div class="csub">Lost margin + holding cost</div><div class="chart" id="c-cost"></div><div class="legend"><span><i style="background:var(--bad)"></i>lost margin (under)</span><span><i style="background:var(--neutral)"></i>holding cost (over)</span></div></div>
+    </div>
+    <div class="grid2" style="margin-top:16px">
+      <div class="card"><div class="ctitle">Error by store format</div><div class="csub">Lower-volume rural stores carry more random noise</div><div class="chart" id="c-format"></div></div>
+      <div class="card"><div class="ctitle">Error by category</div><div class="csub">Checked so an average can't hide a weak spot</div><div class="chart" id="c-cat"></div></div>
+    </div>
+    <p class="note" style="margin-top:10px" id="costnote"></p>
+  </section>
+
+  <section class="block" id="forecasts">
+    <div class="shead">
+      <div class="kicker">05 · Nightly forecast and reasons</div>
+      <h2>Forecasts people <em>can act on</em></h2>
+      <p>Every night the champion model forecasts 14 days for every store and item, and each row carries its top three reasons from exact SHAP values: a "glass box" for planners. Pick a series to compare the forecast with what actually sold.</p>
+    </div>
+    <div class="card">
+      <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <div><div class="ctitle" id="fc-title"></div><div class="csub" id="fc-sub" style="margin:0"></div></div>
+        <label class="note">Series <select id="fc-pick"></select></label>
+      </div>
+      <div class="chart" id="c-forecast"></div>
+      <div class="legend"><span><i style="background:var(--neutral)"></i>history (actual)</span><span><i style="background:var(--accent)"></i>forecast</span><span><i style="background:var(--gold)"></i>what actually sold</span></div>
+      <div id="reasons" style="margin-top:14px"></div>
+    </div>
+    <div class="card" style="margin-top:16px">
+      <div class="ctitle">What drives the forecast overall</div>
+      <div class="csub">Average size of each input's push on a forecast (mean |SHAP|, units)</div>
+      <div class="chart" id="c-imp"></div>
+    </div>
+  </section>
+
+  <section class="block" id="monitoring">
+    <div class="shead">
+      <div class="kicker">06 · Monitoring and retraining</div>
+      <h2>It noticed when <em>the world changed</em></h2>
+      <p id="scenario"></p>
+    </div>
+    <div class="grid2">
+      <div class="card"><div class="ctitle">Forecast bias by region, first 14 days</div><div class="csub" id="biassub"></div><div class="chart" id="c-bias"></div></div>
+      <div class="card"><div class="ctitle">Input drift: regular price vs. normal, by category</div><div class="csub" id="psisub"></div><div class="chart" id="c-psi"></div></div>
+    </div>
+    <div class="callout" style="margin-top:16px" id="retrain"></div>
+  </section>
+
+  <section class="block" id="registry">
+    <div class="shead">
+      <div class="kicker">07 · Registry, pipelines, tests</div>
+      <h2>Built to run <em>without a babysitter</em></h2>
+      <p>Approved models are versioned with a model card; one version is the live champion. The same steps compile into two Vertex AI pipelines: weekly training with the gate as a conditional branch, and daily monitoring that can trigger retraining. CI runs the tests and compiles the pipelines on every push.</p>
+    </div>
+    <div class="tablewrap"><table id="regtable"></table></div>
+    <div class="grid2" style="margin-top:16px">
+      <div class="card"><div class="ctitle">Run it yourself</div><div class="csub">About a minute on a laptop</div>
+<pre class="code">pip install -e ".[dev]"
+python -m dgforecast.pipeline.local_run           # data to forecast
+python -m dgforecast.pipeline.monitor_and_retrain # 4 weeks later
+python -m pytest -q                               # 9 tests
+python -m dgforecast.pipeline.vertex_pipeline     # Vertex AI YAML
+python -m dgforecast.report.dashboard             # this page</pre>
+      </div>
+      <div class="card"><div class="ctitle">Tests (all passing)</div><div class="csub">The leakage test is the one interviewers ask about</div>
+        <ul style="margin:0;padding-left:18px;display:grid;gap:4px;font-size:.9rem">
+          <li>Features don't change when the last 14 days of sales change</li>
+          <li>Stockout days become blanks, not zeros</li>
+          <li>Duplicates and negative sales fail validation</li>
+          <li>WAPE, bias, and dollar cost are calculated correctly</li>
+          <li>The full pipeline runs on tiny data, one forecast per store-item-day</li>
+          <li>Both Vertex AI pipelines compile</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+</div>
+</main>
+
+<footer class="gutter"><div class="wrap">
+  <span>Bawelile Gule · Data scientist and AI strategist · M.S. Artificial Intelligence, Kennesaw State (expected Dec 2027)</span>
+  <span>Synthetic data built to mirror dollar-store demand · No company data used</span>
+</div></footer>
+
+<div class="tip" id="tip" hidden></div>
+
+<script>
+const D=/*__DATA__*/null;
+const $=s=>document.querySelector(s);
+const NS="http://www.w3.org/2000/svg";
+const pct=(v,d=1)=>(v*100).toFixed(d)+"%";
+const spct=(v,d=1)=>(v>0?"+":"")+(v*100).toFixed(d)+"%";
+const usd=v=>"$"+Math.round(v).toLocaleString("en-US");
+const n0=v=>Math.round(v).toLocaleString("en-US");
+function svg(tag,attrs={},parent){const e=document.createElementNS(NS,tag);for(const[k,v]of Object.entries(attrs)){if(k==="text")e.textContent=v;else if(k==="style")e.setAttribute("style",v);else e.setAttribute(k,v)}if(parent)parent.appendChild(e);return e}
+function h(tag,attrs={},...kids){const e=document.createElement(tag);for(const[k,v]of Object.entries(attrs)){if(k==="text")e.textContent=v;else if(k==="html")e.innerHTML=v;else if(k.startsWith("on"))e.addEventListener(k.slice(2),v);else e.setAttribute(k,v)}kids.forEach(c=>c!=null&&e.append(c));return e}
+const tip=$("#tip");
+function showTip(ev,html){tip.innerHTML=html;tip.hidden=false;const x=Math.min(ev.clientX+14,window.innerWidth-270);tip.style.left=x+"px";tip.style.top=(ev.clientY+14)+"px"}
+function hideTip(){tip.hidden=true}
+
+if(!D){document.body.innerHTML="<p style='padding:24px'>Run <code>python -m dgforecast.report.dashboard</code> to fill this page with results.</p>"}
+
+/* ---------- hero tiles ---------- */
+const E=D.eval, M=D.meta;
+const saved=(E.dollars.baseline.lost+E.dollars.baseline.holding)-(E.dollars.model.lost+E.dollars.model.holding);
+const tiles=[
+  [pct(E.daily.model),"daily error (WAPE)",`vs ${pct(E.daily.baseline)} baseline`],
+  [(100*(E.daily.model-E.daily.oracle)).toFixed(1)+"<i> pts</i>","from a perfect model",`perfect = ${pct(E.daily.oracle)}`],
+  [pct(E.weekly.model),"weekly error",`vs ${pct(E.weekly.baseline)} baseline`],
+  [usd(saved/1000)+"<i>K</i>","less error cost",`in 4 weeks, ${n0(M.stores*M.items)} store-items`],
+];
+tiles.forEach(([b,s,sm])=>$("#tiles").append(h("div",{class:"tile"},h("b",{html:b}),h("span",{text:s}),h("small",{text:sm}))));
+
+/* ---------- lifecycle ---------- */
+const SN=D.snippets, MO=D.monitoring, R=D.retrain;
+const STAGES=[
+ {k:"data",n:"Step 1",t:"Data",s:"synthetic sales",
+  what:"A simulator generates daily sales for every store and item, with the forces that move dollar-store demand. Because it knows the true expected demand, it can also score a perfect forecast.",
+  facts:[[n0(M.rows),"daily store-item rows"],[`${M.stores} × ${M.items}`,"stores × items"],[M.start+" to "+M.end,"history"],[pct(M.stockout_rate),"stockout days"]],
+  cloud:"Raw files land in Cloud Storage and load into BigQuery tables."},
+ {k:"validate",n:"Step 2",t:"Validate",s:"stop on bad data",
+  what:"Nine checks on schema, nulls, duplicates, impossible values, and missing days. One failure stops the run, so a half-loaded table never becomes a forecast.",
+  facts:[[D.validation.filter(c=>c.passed).length+" / "+D.validation.length,"checks passed"],["0","duplicate rows"]],
+  cloud:"First component of the Vertex AI training pipeline; a failure fails the run."},
+ {k:"features",n:"Step 3",t:"Features",s:"14-day lag rule",
+  what:"24 features: past demand (all at least 14 days old), chain and store context, price and promotion, calendar (SNAP window, paycheck Friday, holidays), and store and item attributes. Stockout days are blanked so the model learns demand, not empty shelves.",
+  facts:[[M.features,"features"],["14 days","minimum lag"]],
+  cloud:"The same features run in BigQuery as SQL window functions (features.sql)."},
+ {k:"train",n:"Step 4",t:"Train",s:"XGBoost, by date",
+  what:"XGBoost with a Tweedie objective (built for counts with many zeros), trained on a chronological split with early stopping on a separate validation window. Every run is logged.",
+  facts:[[n0(M.train_rows),"training rows"],[M.trees,"trees (early stopped)"],[M.test_dates[0].slice(5)+" to "+M.test_dates[1].slice(5),"28-day holdout"],["reg:tweedie","objective"]],
+  cloud:"A Vertex AI Pipelines step; metrics go to Vertex AI Experiments."},
+ {k:"gate",n:"Step 5",t:"Evaluate + gate",s:"beat the champion",gate:true,snip:"gate",
+  what:"The new model, the live champion, and a naive baseline are scored on the same holdout, overall and by segment. The new model ships only if it beats the baseline and improves on the champion by at least 1%.",
+  facts:[[pct(E.daily.model),"model daily WAPE"],[pct(E.daily.baseline),"baseline daily WAPE"],[E.decision.promote?"Promoted":"Kept champion","first run"],[R?(R.promote?"Promoted":"Kept champion"):"–","after retraining"]],
+  cloud:"A dsl.If branch in the pipeline: register and forecast only if promoted."},
+ {k:"registry",n:"Step 6",t:"Registry",s:"versions, champion",snip:null,
+  what:"Each approved model gets a version number and a model card (intended use, data dates, metrics, limitations). One version is marked champion; every forecast row records which version made it.",
+  facts:D.registry.map(r=>[r.version+(r.champion?" ★":""),r.champion?"live champion":"registered, not promoted"]),
+  cloud:"Vertex AI Model Registry: one model name, many versions, the live one as default."},
+ {k:"forecast",n:"Step 7",t:"Batch forecast",s:"14 days + reasons",
+  what:"Every night the champion forecasts the next 14 days for every store and item. Because all sales features are 14+ days old, the code builds them from history plus the price and promo plan. Each row carries its top three reasons.",
+  facts:[[n0(D.series.length?M.stores*M.items*M.horizon:0),"forecast rows per night"],[D.origin,"last forecast date"]],
+  cloud:"Written to a BigQuery forecasts table; Vertex AI Batch Prediction is the managed option."},
+ {k:"monitor",n:"Step 8",t:"Monitor",s:"drift and accuracy",
+  what:"Two kinds of warning: input drift (PSI against the last 4 weeks, on regular prices, by category) before sales arrive, and outcome decay (WAPE overall and bias by region) after. Either can trigger retraining.",
+  facts:[[MO.regions.filter(r=>r.alert).map(r=>r.name).join(", ")||"none","regions alerted"],[MO.flagged.length,"drift flags"],[pct(MO.live_wape),"live WAPE"],[pct(MO.threshold),"WAPE alert line"]],
+  cloud:"A daily monitoring pipeline; an alert logs an error for Cloud Monitoring and starts retraining."},
+ {k:"pipeline",n:"Steps 1–8",t:"Vertex AI pipelines",s:"weekly train, daily monitor",
+  what:"Each step is a Kubeflow (KFP v2) component running this repo's Docker image. Weekly training: validate, features, train, gate, then register, forecast, and explain only if promoted. Daily monitoring: check, then retrain on alert.",
+  facts:[["2","pipelines"],["9","tests in CI"],["Mon 5:00","training schedule"],["Daily 7:00","monitoring schedule"]],
+  cloud:"Compiled to YAML and scheduled with the Vertex AI SDK (cloud/submit.py)."},
+];
+let current="data";
+const POS={data:[0,0],validate:[1,0],features:[2,0],train:[3,0],gate:[3,1],registry:[2,1],forecast:[1,1],monitor:[0,1]};
+function drawLife(){
+  const el=$("#lifemap");el.innerHTML="";
+  const W=600,BW=128,BH=66,gx=(W-40-4*BW)/3,x0=24,y0=34,y1=150;
+  const s=svg("svg",{viewBox:`0 0 ${W} 286`,role:"img","aria-label":"The eight steps of the forecasting system in a loop"},el);
+  const defs=svg("defs",{},s);const mk=svg("marker",{id:"arr",viewBox:"0 0 10 10",refX:"9",refY:"5",markerWidth:"6",markerHeight:"6",orient:"auto-start-reverse"},defs);
+  svg("path",{d:"M0 0L10 5L0 10z",style:"fill:var(--neutral)"},mk);
+  const X=c=>x0+c*(BW+gx), Y=r=>r?y1:y0;
+  const E2=(d,l,lx,ly)=>{svg("path",{d,class:"edge","marker-end":"url(#arr)"},s);if(l)svg("text",{x:lx,y:ly,class:"edgel","text-anchor":"middle",text:l},s)};
+  for(let c=0;c<3;c++)E2(`M${X(c)+BW} ${y0+BH/2}H${X(c+1)}`);
+  E2(`M${X(3)+BW/2} ${y0+BH}V${y1}`);
+  for(let c=3;c>0;c--)E2(`M${X(c)} ${y1+BH/2}H${X(c-1)+BW}`);
+  s.lastChild;
+  svg("text",{x:X(3)-gx/2,y:y1+BH+16,class:"edgel","text-anchor":"middle",text:"if promoted"},s);
+  E2(`M${X(0)} ${y1+BH/2}H${x0-12}V${y0-14}H${X(1)+BW/2}V${y0}`,"alert: retrain",(x0+X(1))/2+30,y0-20);
+  STAGES.filter(st=>POS[st.k]).forEach(st=>{
+    const [c,r]=POS[st.k];const g=svg("g",{class:"node"+(st.gate?" gate":"")+(st.k===current?" on":""),tabindex:"0",role:"button","aria-label":st.t},s);
+    svg("rect",{x:X(c),y:Y(r),width:BW,height:BH,rx:"6"},g);
+    svg("text",{x:X(c)+BW/2,y:Y(r)+18,class:"nb","text-anchor":"middle",text:st.n.toUpperCase()},g);
+    svg("text",{x:X(c)+BW/2,y:Y(r)+37,class:"nm","text-anchor":"middle",text:st.t},g);
+    svg("text",{x:X(c)+BW/2,y:Y(r)+54,class:"ns","text-anchor":"middle",text:st.s},g);
+    g.addEventListener("click",()=>select(st.k));g.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();select(st.k)}});
+  });
+  const p=STAGES.find(x=>x.k==="pipeline");const g=svg("g",{class:"node"+(current==="pipeline"?" on":""),tabindex:"0",role:"button","aria-label":p.t},s);
+  svg("rect",{x:x0,y:244,width:W-48,height:34,rx:"6"},g);
+  svg("text",{x:W/2,y:266,class:"nm","text-anchor":"middle",text:"Runs as two scheduled Vertex AI pipelines"},g);
+  g.addEventListener("click",()=>select("pipeline"));g.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();select("pipeline")}});
+}
+function drawChips(){const c=$("#chips");c.innerHTML="";STAGES.forEach(st=>c.append(h("button",{class:"chip","aria-pressed":String(st.k===current),onclick:()=>select(st.k)},st.t)))}
+function drawDetail(){
+  const st=STAGES.find(x=>x.k===current), d=$("#detail");d.innerHTML="";
+  d.append(h("div",{class:"step",text:st.n}),h("h3",{text:st.t}),h("p",{style:"font-size:.95rem",text:st.what}));
+  const f=h("div",{class:"facts"});st.facts.forEach(([b,s])=>f.append(h("div",{class:"fact"},h("b",{text:String(b)}),h("span",{text:s}))));d.append(f);
+  const key=st.snip===undefined?st.k:st.snip;
+  if(key&&SN[key]){d.append(h("div",{},h("div",{class:"codefile",text:SN[key].file}),h("pre",{class:"code",text:SN[key].code})))}
+  d.append(h("div",{class:"cloud"},h("b",{text:"On Google Cloud: "}),document.createTextNode(st.cloud)));
+}
+function select(k){current=k;drawLife();drawChips();drawDetail();try{localStorage.setItem("dgf-stage",k)}catch(e){}}
+try{const k=localStorage.getItem("dgf-stage");if(k&&STAGES.some(s=>s.k===k))current=k}catch(e){}
+select(current);
+
+/* ---------- data section ---------- */
+$("#datasub").textContent=`${M.start} to ${M.end}, ${M.stores} stores, ${M.items} items`;
+[[n0(M.rows),"daily store-item rows"],[pct(M.stockout_rate),"days with an empty shelf"],["4","store formats, rural to urban"],["8","categories, food to seasonal"]].forEach(([b,s])=>$("#datafacts").append(h("div",{class:"fact"},h("b",{text:b}),h("span",{text:s}))));
+D.validation.forEach(c=>$("#checks").append(h("div",{},h("span",{class:c.passed?"ok":"",text:c.passed?"✓":"✗"}),h("span",{text:c.check.replace(/_/g," ")}))));
+
+/* ---------- split timeline ---------- */
+function drawSplit(){
+  const el=$("#split");el.innerHTML="";const W=Math.max(300,el.clientWidth||700),H=64;
+  const s=svg("svg",{viewBox:`0 0 ${W} ${H}`,role:"img","aria-label":"Train, validation, test, and forecast windows in date order"},el);
+  const t=d=>Date.parse(d)/864e5, a=t(M.start), b=t(M.end)+M.horizon;
+  const X=d=>8+(t(d)-a)/(b-a)*(W-16), XE=W-8;
+  const seg=(x1,x2,fill,stroke,dash)=>svg("rect",{x:x1,y:8,width:Math.max(3,x2-x1),height:28,style:`fill:${fill};stroke:${stroke};${dash?"stroke-dasharray:3 2":""}`},s);
+  seg(X(M.train_dates[0]),X(M.valid_dates[0]),"var(--accent-soft)","var(--accent)");
+  seg(X(M.valid_dates[0]),X(M.test_dates[0]),"var(--hl-soft)","var(--hl)");
+  seg(X(M.test_dates[0]),X(M.end),"var(--good-soft)","var(--good)");
+  seg(X(M.end),XE,"none","var(--gold)",true);
+  svg("text",{x:X(M.train_dates[0]),y:54,class:"lbl m",style:"font-size:11px",text:M.train_dates[0]},s);
+  svg("text",{x:X(M.end),y:54,class:"lbl m","text-anchor":"end",style:"font-size:11px",text:M.end},s);
+  const lg=h("div",{class:"legend",style:"margin-top:4px"});
+  [["var(--accent)",`Train · ${M.train_dates[0]} → ${M.train_dates[1]}`],["var(--hl)",`Validation · ${M.valid_dates[0]} → ${M.valid_dates[1]} (early stopping)`],["var(--good)",`Test · ${M.test_dates[0]} → ${M.test_dates[1]} (never seen)`],["var(--gold)",`Forecast · next ${M.horizon} days`]].forEach(([c,l])=>lg.append(h("span",{},h("i",{style:`background:${c}`}),document.createTextNode(l))));
+  el.append(lg);
+}
+$("#splitsub").textContent=`${n0(M.train_rows)} training rows · early stopping on the validation window · final grade on the test window`;
+
+/* ---------- bar charts ---------- */
+function hbars(el,rows,{max,fmt=pct,lw=110,refs=[]}={}){
+  el.innerHTML="";const W=Math.max(240,el.clientWidth||300),rh=30,H=rows.length*rh+14;
+  const s=svg("svg",{viewBox:`0 0 ${W} ${H}`},el);const x0=lw,x1=W-56;
+  max=max||Math.max(...rows.map(r=>r.v))*1.05;const X=v=>x0+(x1-x0)*v/max;
+  refs.forEach(r=>{svg("line",{x1:X(r.v),x2:X(r.v),y1:2,y2:H-10,style:"stroke:var(--gold);stroke-width:1.25;stroke-dasharray:4 3"},s);svg("text",{x:X(r.v)+4,y:H-2,class:"lbl m",style:"font-size:10.5px",text:r.l},s)});
+  rows.forEach((r,i)=>{const y=6+i*rh;svg("text",{x:x0-8,y:y+14,class:"lbl","text-anchor":"end",text:r.l},s);
+    const b=svg("rect",{x:x0,y:y+3,width:Math.max(2,X(r.v)-x0),height:16,rx:"2",style:`fill:${r.c||"var(--accent)"}`},s);
+    svg("text",{x:X(r.v)+6,y:y+15,class:"val",text:fmt(r.v)},s);
+    if(r.tip){b.addEventListener("mousemove",e=>showTip(e,r.tip));b.addEventListener("mouseleave",hideTip)}});
+}
+function divbars(el,rows,{lim,lw=90}={}){
+  el.innerHTML="";const W=Math.max(240,el.clientWidth||300),rh=32,H=rows.length*rh+22;
+  const s=svg("svg",{viewBox:`0 0 ${W} ${H}`},el);const x0=lw,x1=W-52,mx=Math.max(lim*1.5,...rows.map(r=>Math.abs(r.v)))*1.1;
+  const X=v=>x0+(x1-x0)*(v+mx)/(2*mx);
+  svg("rect",{x:X(-lim),y:0,width:X(lim)-X(-lim),height:H-18,style:"fill:var(--sheet)"},s);
+  svg("line",{x1:X(0),x2:X(0),y1:0,y2:H-18,class:"axis",style:"stroke:var(--muted)"},s);
+  [-lim,lim].forEach(v=>svg("text",{x:X(v),y:H-4,class:"lbl m","text-anchor":"middle",style:"font-size:10.5px",text:spct(v,0)},s));
+  svg("text",{x:X(0),y:H-4,class:"lbl m","text-anchor":"middle",style:"font-size:10.5px",text:"0"},s);
+  rows.forEach((r,i)=>{const y=4+i*rh,c=r.alert?"var(--bad)":"var(--accent)";
+    svg("text",{x:x0-8,y:y+15,class:"lbl","text-anchor":"end",style:r.alert?"font-weight:600":"",text:r.l},s);
+    const a=Math.min(X(0),X(r.v)),w=Math.abs(X(r.v)-X(0));svg("rect",{x:a,y:y+4,width:Math.max(2,w),height:16,rx:"2",style:`fill:${c}`},s);
+    svg("text",{x:r.v>=0?X(r.v)+6:X(r.v)-6,y:y+16,class:"val","text-anchor":r.v>=0?"start":"end",style:r.alert?"fill:var(--bad);font-weight:600":"",text:spct(r.v)},s)});
+}
+function costbars(el){
+  el.innerHTML="";const W=Math.max(240,el.clientWidth||300),H=2*40+16,s=svg("svg",{viewBox:`0 0 ${W} ${H}`},el);
+  const rows=[["Baseline",E.dollars.baseline],["Model",E.dollars.model]],x0=74,x1=W-70;
+  const mx=Math.max(...rows.map(([,d])=>d.lost+d.holding));const X=v=>(x1-x0)*v/mx;
+  rows.forEach(([l,d],i)=>{const y=8+i*40;svg("text",{x:x0-8,y:y+17,class:"lbl","text-anchor":"end",text:l},s);
+    const a=svg("rect",{x:x0,y:y+4,width:X(d.lost),height:20,style:"fill:var(--bad)"},s);
+    const b=svg("rect",{x:x0+X(d.lost),y:y+4,width:X(d.holding),height:20,style:"fill:var(--neutral)"},s);
+    a.addEventListener("mousemove",e=>showTip(e,`${l}: lost margin ${usd(d.lost)}`));a.addEventListener("mouseleave",hideTip);
+    b.addEventListener("mousemove",e=>showTip(e,`${l}: holding cost ${usd(d.holding)}`));b.addEventListener("mouseleave",hideTip);
+    svg("text",{x:x0+X(d.lost+d.holding)+6,y:y+18,class:"val",text:usd(d.lost+d.holding)},s)});
+}
+
+/* ---------- forecast explorer ---------- */
+let pick=0;
+function drawForecast(){
+  const S=D.series[pick],el=$("#c-forecast");el.innerHTML="";
+  $("#fc-title").textContent=S.label;$("#fc-sub").textContent=S.sub+` · forecast made ${D.origin}`;
+  const W=Math.max(300,el.clientWidth||700),H=260,pl=44,pr=14,pt=12,pb=28;
+  const s=svg("svg",{viewBox:`0 0 ${W} ${H}`,role:"img","aria-label":"History, forecast, and actual sales"},el);
+  const all=[...S.history.map(p=>p.d),...S.forecast.map(p=>p.d)];const t=d=>Date.parse(d)/864e5;
+  const a=t(all[0]),b=t(all[all.length-1]);const ys=[...S.history.map(p=>p.y),...S.forecast.flatMap(p=>[p.yhat,p.actual])];
+  const ymax=Math.max(...ys)*1.12;const X=d=>pl+(t(d)-a)/(b-a)*(W-pl-pr),Y=v=>pt+(1-v/ymax)*(H-pt-pb);
+  const step=ymax>200?100:ymax>80?20:ymax>40?10:5;
+  for(let v=0;v<=ymax;v+=step){svg("line",{x1:pl,x2:W-pr,y1:Y(v),y2:Y(v),class:"grid"},s);svg("text",{x:pl-6,y:Y(v)+4,class:"lbl m","text-anchor":"end",style:"font-size:10.5px",text:v},s)}
+  const o=S.forecast[0].d;svg("rect",{x:X(o)-((W-pl-pr)/(b-a))/2,y:pt,width:W-pr-X(o)+((W-pl-pr)/(b-a))/2,height:H-pt-pb,style:"fill:var(--hl-soft);opacity:.6"},s);
+  svg("text",{x:X(o),y:H-8,class:"lbl","style":"font-size:10.5px;fill:var(--hl)",text:"next 14 days →"},s);
+  svg("text",{x:pl,y:H-8,class:"lbl m",style:"font-size:10.5px",text:S.history[0].d},s);
+  const line=(pts,c,w,dash)=>svg("path",{d:pts.map((p,i)=>(i?"L":"M")+p[0].toFixed(1)+" "+p[1].toFixed(1)).join(""),style:`fill:none;stroke:${c};stroke-width:${w};${dash?"stroke-dasharray:"+dash:""}`},s);
+  line(S.history.map(p=>[X(p.d),Y(p.y)]),"var(--neutral)",1.6);
+  line(S.forecast.map(p=>[X(p.d),Y(p.yhat)]),"var(--accent)",2.4);
+  S.forecast.forEach(p=>{const c=svg("circle",{cx:X(p.d),cy:Y(p.actual),r:3.6,style:"fill:var(--gold)"},s);
+    const hit=svg("rect",{x:X(p.d)-8,y:pt,width:16,height:H-pt-pb,style:"fill:transparent;cursor:crosshair"},s);
+    const html=`<b>${p.d}</b><br>forecast ${p.yhat} · actual ${p.actual}`+(p.reasons?`<br><span style="opacity:.8">${p.reasons.join("<br>")}</span>`:"");
+    hit.addEventListener("mousemove",e=>showTip(e,html));hit.addEventListener("mouseleave",hideTip)});
+  const fsum=S.forecast.reduce((a,p)=>a+p.yhat,0),asum=S.forecast.reduce((a,p)=>a+p.actual,0);
+  const r=$("#reasons");r.innerHTML="";
+  r.append(h("p",{class:"note",text:`14-day total: forecast ${n0(fsum)} units, actual ${n0(asum)} (${spct((fsum-asum)/Math.max(asum,1))} bias).`+(S.sub.startsWith("South")?" The South was hit by a new competitor during these weeks, which history couldn't show yet; monitoring flags it (section 06).":"")}));
+  if(S.forecast[0].reasons){const tw=h("div",{class:"tablewrap",style:"margin-top:10px"});const tb=h("table");
+    tb.append(h("thead",{},h("tr",{},...["Date","Forecast","Actual","Reason 1","Reason 2","Reason 3"].map(x=>h("th",{text:x})))));
+    const body=h("tbody");S.forecast.slice(0,7).forEach(p=>body.append(h("tr",{},h("td",{class:"mono",text:p.d}),h("td",{class:"num",text:p.yhat}),h("td",{class:"num",text:p.actual}),...p.reasons.map(x=>h("td",{text:x})))));
+    tb.append(body);tw.append(tb);r.append(tw,h("p",{class:"note",style:"margin-top:6px",text:"First 7 days shown; (+) pushed the forecast up, (−) pushed it down."}))}
+}
+D.series.forEach((s,i)=>$("#fc-pick").append(h("option",{value:i,text:s.label+" ("+s.sub.split(" · ")[0]+")"})));
+$("#fc-pick").addEventListener("change",e=>{pick=+e.target.value;drawForecast()});
+
+/* ---------- monitoring ---------- */
+const sc=MO.scenario||{};
+$("#scenario").textContent=`Four weeks after the forecast, two things happen in the simulation: a competitor opens in the ${sc.region_hit||"South"} (demand ${spct(sc.region_demand_change||-0.3,0)}), and suppliers raise household prices ${pct((sc.category_price_change||{}).household||0.12,0)}. Overall error stayed under its alert line (${pct(MO.live_wape)} vs ${pct(MO.threshold)}), but a per-region check caught the problem.`;
+$("#biassub").textContent=`Shaded band = ±${pct(MO.bias_limit,0)} alert limit. Positive = over-forecast (too much stock).`;
+$("#psisub").textContent=`PSI on regular-price days vs the last 4 weeks. Dashed line = ${MO.psi_limit} alert.`;
+if(R){$("#retrain").innerHTML="";$("#retrain").append(
+  h("div",{class:"ctitle"},document.createTextNode("Retraining ran automatically, and the gate "),h("span",{class:"pill "+(R.promote?"good":"gold"),text:R.promote?"promoted the new model":"kept the champion"})),
+  h("p",{class:"note",style:"margin-top:6px",text:`New model ${pct(R.candidate)} WAPE vs champion ${pct(R.champion)} on the newest 4 weeks (needs a 1% improvement; baseline ${pct(R.baseline)}). The new weeks fell in the test window, so the retrained model hadn't learned from them yet. The gate stopped a model that wasn't better, and the 14-day lag features catch up with the new level on their own.`}))}
+
+/* ---------- registry ---------- */
+const rt=$("#regtable");rt.append(h("thead",{},h("tr",{},...["Version","Status","Run","Trained on","Graded on","Test WAPE"].map(x=>h("th",{text:x})))));
+const rb=h("tbody");D.registry.forEach(r=>rb.append(h("tr",{},h("td",{class:"mono",text:r.version}),h("td",{},h("span",{class:"pill "+(r.champion?"good":"gold"),text:r.champion?"Champion":"Registered, not promoted"})),h("td",{class:"mono",text:r.run_id}),h("td",{class:"num",text:r.train[0]+" → "+r.train[1]}),h("td",{class:"num",text:r.test[0]+" → "+r.test[1]}),h("td",{class:"num",text:pct(r.wape)}))));rt.append(rb);
+
+/* ---------- draw all charts (and redraw on resize) ---------- */
+function drawCharts(){
+  const base="var(--neutral)",mod="var(--accent)",orc="var(--gold)";
+  hbars($("#c-daily"),[{l:"Baseline",v:E.daily.baseline,c:base},{l:"Model",v:E.daily.model,c:mod},{l:"Perfect",v:E.daily.oracle,c:orc}],{max:Math.max(E.daily.baseline)*1.1,lw:70});
+  hbars($("#c-weekly"),[{l:"Baseline",v:E.weekly.baseline,c:base},{l:"Model",v:E.weekly.model,c:mod}],{max:E.weekly.baseline*1.15,lw:70});
+  costbars($("#c-cost"));
+  hbars($("#c-format"),E.by_format.map(r=>({l:r.name,v:r.wape,tip:`${r.name}: WAPE ${pct(r.wape)}, bias ${spct(r.bias)}`})),{max:.75,lw:86});
+  hbars($("#c-cat"),E.by_category.slice().sort((a,b)=>a.wape-b.wape).map(r=>({l:r.name,v:r.wape,tip:`${r.name}: WAPE ${pct(r.wape)}, bias ${spct(r.bias)}`})),{max:.75,lw:100});
+  hbars($("#c-imp"),D.importance.map(r=>({l:r.name,v:r.value})),{fmt:v=>v.toFixed(2),lw:170});
+  divbars($("#c-bias"),MO.regions.map(r=>({l:r.name,v:r.bias,alert:r.alert})),{lim:MO.bias_limit});
+  hbars($("#c-psi"),MO.psi.slice().sort((a,b)=>b.psi-a.psi).map(r=>({l:r.name,v:r.psi,c:r.psi>MO.psi_limit?"var(--bad)":"var(--accent)"})),{fmt:v=>v.toFixed(2),lw:100,refs:[{v:MO.psi_limit,l:"0.2"}]});
+  drawSplit();drawForecast();
+}
+const sv=E.dollars;$("#costnote").textContent=`Cost assumptions: 35% gross margin on sales lost to under-forecasting, 25% holding cost on units over-forecast. Bias: model ${spct(E.bias.model)}, baseline ${spct(E.bias.baseline)}; the slight December under-forecast is the next improvement.`;
+drawCharts();
+let rz;window.addEventListener("resize",()=>{clearTimeout(rz);rz=setTimeout(drawCharts,150)});
+</script>
+</body>
+</html>

@@ -1,0 +1,61 @@
+{
+  "forecast": "20251230",
+  "champion": "v1",
+  "input_drift": {
+    "overall": {
+      "rmean_28": 0.004,
+      "lag_14": 0.001,
+      "item_chain_rmean_28": 0.0469,
+      "store_total_rmean_28": 0.0787,
+      "price": 0.0386,
+      "price_index": 0.0575,
+      "on_promo": 0.0019
+    },
+    "price_index_by_category": {
+      "snacks": 1.808,
+      "beverages": 0.0774,
+      "household": 4.8467,
+      "paper": 0.0432,
+      "health_beauty": 0.0195,
+      "frozen": 0.0095,
+      "dairy": 0.0158,
+      "seasonal": 0.0
+    },
+    "flagged": [
+      "price_index[snacks]",
+      "price_index[household]"
+    ]
+  },
+  "outcome_decay": {
+    "days_scored": 14,
+    "live_wape": 0.6034,
+    "live_bias": 0.0915,
+    "training_wape": 0.5285,
+    "alert_threshold": 0.6342,
+    "wape_alert": false,
+    "regions_off": [
+      "South"
+    ],
+    "alert": true,
+    "by_region": {
+      "Midwest": {
+        "wape": 0.5099,
+        "bias": -0.0897
+      },
+      "South": {
+        "wape": 0.7808,
+        "bias": 0.4565
+      },
+      "Southeast": {
+        "wape": 0.5453,
+        "bias": -0.0655
+      },
+      "Southwest": {
+        "wape": 0.5529,
+        "bias": 0.0159
+      }
+    }
+  },
+  "retrain_triggered": true,
+  "new_champion": "v1"
+}

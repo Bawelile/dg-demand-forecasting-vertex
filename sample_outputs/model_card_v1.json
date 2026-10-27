@@ -1,0 +1,35 @@
+{
+  "version": "v1",
+  "run_id": "run-20261026-234444",
+  "trained_at": "2026-10-26T23:45:00+00:00",
+  "intended_use": "14-day store-item unit forecasts for replenishment planning",
+  "data": {
+    "train": [
+      "2024-01-21",
+      "2025-11-04"
+    ],
+    "test": [
+      "2025-12-03",
+      "2025-12-30"
+    ],
+    "rows": 1135217
+  },
+  "metrics": {
+    "wape": 0.5285131276296409,
+    "bias": -0.07672008518281197,
+    "mae": 2.0671726585782366,
+    "units": 194239.0
+  },
+  "baseline_metrics": {
+    "wape": 0.7366804422693884,
+    "bias": 0.012097688189922802,
+    "mae": 2.881377185839265,
+    "units": 194239.0
+  },
+  "limitations": [
+    "Trained on synthetic data; validate on real sales before use.",
+    "New stores rely on chain-level item averages until they have 4+ weeks of history.",
+    "Stockout days are excluded from training, so forecasts estimate demand, not recorded sales."
+  ],
+  "status": "champion"
+}

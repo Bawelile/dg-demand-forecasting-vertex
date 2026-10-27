@@ -1,0 +1,50 @@
+{
+  "passed": true,
+  "checks": [
+    {
+      "check": "required_columns",
+      "passed": true,
+      "detail": "all present"
+    },
+    {
+      "check": "min_rows",
+      "passed": true,
+      "detail": "1,339,680 rows (need 10,000)"
+    },
+    {
+      "check": "null_rate",
+      "passed": true,
+      "detail": "worst column null rate 0.000%"
+    },
+    {
+      "check": "duplicates",
+      "passed": true,
+      "detail": "0 duplicate store-item-days"
+    },
+    {
+      "check": "non_negative_units",
+      "passed": true,
+      "detail": "0 negative sales rows"
+    },
+    {
+      "check": "positive_prices",
+      "passed": true,
+      "detail": "0 rows with price <= 0"
+    },
+    {
+      "check": "binary_flags",
+      "passed": true,
+      "detail": "on_promo and stockout_flag are 0/1"
+    },
+    {
+      "check": "no_missing_days",
+      "passed": true,
+      "detail": "0 series with missing days"
+    },
+    {
+      "check": "fresh_data",
+      "passed": true,
+      "detail": "latest date 2026-01-27"
+    }
+  ]
+}
